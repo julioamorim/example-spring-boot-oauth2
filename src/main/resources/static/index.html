@@ -11,12 +11,36 @@
     <link rel="stylesheet" type="text/css" href="/webjars/bootstrap/css/bootstrap.min.css" />
     <script type="text/javascript" src="/webjars/jquery/jquery.min.js"></script>
     <script type="text/javascript" src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/webjars/js-cookie/js.cookie.js"></script>
 
     <script type="text/javascript">
-        $.get("/user", function(data) {
+        $.get("/user", function (data) {
             $("#user").html(data.name);
             $(".unauthenticated").hide()
             $(".authenticated").show()
+        });
+
+        var logout = function () {
+            $.post("/logout", function () {
+                $("#user").html('');
+                $(".unauthenticated").show();
+                $(".authenticated").hide();
+            })
+            return true;
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (settings.type == 'POST' || settings.type == 'PUT'
+                    || settings.type == 'DELETE') {
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/
+                        .test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-XSRF-TOKEN",
+                            Cookies.get('XSRF-TOKEN'));
+                    }
+                }
+            }
         });
     </script>
 </head>
@@ -25,10 +49,10 @@
     <div class="container unauthenticated">
         With Github: <a href="/oauth2/authorization/github">click here</a>
     </div>
-    <div class="container authenticated"  style="display: none;">
+    <div class="container authenticated" style="display: none;">
         Logged in as: <span id="user"></span>
         <h1>Conteudo</h1>
-
+        <button onclick="logout()" class="btn btn-primary">Logout</button>
     </div>
 </body>
 
